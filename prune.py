@@ -23,7 +23,7 @@ parser.add_argument('--data_loc', default='/disk/scratch/datasets/cifar', type=s
 parser.add_argument('--optimizer', choices=['sgd', 'adam'], default='sgd', type=str, help='optimizer')
 parser.add_argument('-b', '--batch_size', default=128, type=int, metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('-lr', '--learning_rate', default=8e-4, type=float, metavar='LR', help='initial learning rate')
-parser.add_argument('-epochs', '--no_epochs', default=1300, type=int, metavar='epochs', help='no. epochs')
+parser.add_argument('-epochs', '--no_epochs', default=3000, type=int, metavar='epochs', help='no. epochs')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
 parser.add_argument('--weight_decay', '--wd', default=0.0005, type=float, metavar='W', help='weight decay')
 parser.add_argument('--prune_every', default=100, type=int, help='prune every X steps')
@@ -50,6 +50,12 @@ if args.net == 'res':
     model = WideResNet(args.depth, args.width, mask=args.mask)
 elif args.net =='dense':
     model = DenseNet(args.growth, args.depth, args.transition_rate, 10, True, mask=args.mask)
+elif args.net == 'resnet18':
+    model = resnet18(mask=True)
+
+model( torch.rand(1,3,32,32))
+state = torch.load('checkpoints/%s.t7' % args.base_model, map_location='cpu')
+
 
 model.load_state_dict(torch.load('checkpoints/%s.t7' % args.base_model, map_location='cpu')['state_dict'], strict=True)
 
@@ -277,4 +283,3 @@ if __name__ == '__main__':
 
         ## Prune
         prune()
-

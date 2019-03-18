@@ -32,7 +32,9 @@ parser.add_argument('--eval', '-e', action='store_true', help='resume from check
 parser.add_argument('--mask', '-m', type=int, help='mask mode', default=0)
 parser.add_argument('--deploy', '-de', action='store_true', help='prune and deploy model')
 parser.add_argument('--params_left', '-pl', default=0, type=int, help='prune til...')
-parser.add_argument('--net', choices=['res', 'dense'], default='res')
+parser.add_argument('--net', choices=['res', 'dense', 'resnet18'], default='res')
+parser.add_argument('--lottery', action='store_true')
+parser.add_argument('--reset_epoch', default=0, type=int)
 
 # Net specific
 parser.add_argument('--depth', '-d', default=40, type=int, metavar='D', help='depth of wideresnet/densenet')
@@ -64,7 +66,8 @@ elif args.net == 'dense':
         model = DenseNet(args.growth, args.depth, args.transition_rate, 10, True, mask=args.mask)
     else:
         model = DenseNet(args.growth, args.depth, args.transition_rate, 10, True, width=args.bottle_mult)
-
+elif args.net == 'resnet18':
+    model = resnet18(mask=True)
 else:
     raise ValueError('pick a valid net')
 
@@ -86,6 +89,7 @@ if args.deploy:
     else:
         model.load_state_dict(SD['state_dict'])
 
+model(torch.rand(1,3,32,32))
 pruner.compress(model)
 
 get_inf_params(model)
@@ -241,7 +245,13 @@ def validate():
 
 if __name__ == '__main__':
 
+    lottery_fname ='checkpoints/lticket_%s.t7' % args.save_file
     filename = 'checkpoints/%s.t7' % args.save_file
+
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+    model.to(device)
+
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD([v for v in model.parameters() if v.requires_grad],
                                 lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
@@ -254,6 +264,14 @@ if __name__ == '__main__':
 
             print('Epoch %d:' % epoch)
             print('Learning rate is %s' % [v['lr'] for v in optimizer.param_groups][0])
+            if args.lottery:
+                if epoch == args.reset_epoch:
+                    save_checkpoint({
+                        'epoch': epoch,
+                        'state_dict': model.state_dict(),
+                        'error_history': error_history,
+                    }, filename='lottery_fname')
+
             # train for one epoch
             train()
             # # evaluate on validation set
