@@ -35,6 +35,7 @@ parser.add_argument('--params_left', '-pl', default=0, type=int, help='prune til
 parser.add_argument('--net', choices=['res', 'dense', 'resnet18'], default='res')
 parser.add_argument('--lottery', action='store_true')
 parser.add_argument('--reset_epoch', default=0, type=int)
+parser.add_argument('--lottery_file', default='', type=str)
 
 # Net specific
 parser.add_argument('--depth', '-d', default=40, type=int, metavar='D', help='depth of wideresnet/densenet')
@@ -77,6 +78,10 @@ if args.deploy:
     # Feed example to activate masks
     model(torch.rand(1, 3, 32, 32))
     SD = torch.load('checkpoints/%s.t7' % args.base_file)
+
+    if args.lottery:
+        l_SD = torch.load('checkpoints/%s.t7' % args.lottery_file)
+        SD['state_dict'] = l_SD['state_dict']
 
     if not args.eval:
 
@@ -270,7 +275,7 @@ if __name__ == '__main__':
                         'epoch': epoch,
                         'state_dict': model.state_dict(),
                         'error_history': error_history,
-                    }, filename='lottery_fname')
+                    }, filename=lottery_fname)
 
             # train for one epoch
             train()

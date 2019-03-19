@@ -12,14 +12,29 @@ nvidia-smi
 
 cd ..
 
-python train.py --net='resnet18' --data_loc='../prunes/data' --save_file='resnet18' --lottery --reset_epoch=2
-python prune.py --net='resnet18' --data_loc='../prunes/data' --save_file='resnet18_fisher' --base_model='resnet18'
+python train.py --net='resnet18' --data_loc='../prunes/data' --save_file='resnet18_1' --lottery --reset_epoch=2
+python prune.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --save_file='resnet18_fisher' --base_model='resnet18' &
+python prune.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --save_file='resnet18_l1' --base_model='resnet18' --l1_prune=True
+
+echo "pruning done"
 
 # compare lottery tickets to random reinit
-for k in {769744,3497477,6225211,8952944,11680678};
+for k in 11680678 8952944 3500000 780000
 do
-    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_1900_prunes" --params_left $k --save_file="rnet18_scratch_"$k"_params"
-    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="lticket_resnet18_fisher_1900_prunes" --params_left 4k --save_file="rnet18_ltick_"$k"_params"
+    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_1900_prunes" --params_left $k --save_file="r18_fisher_scratch_"$k"_params" &
+    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_1900_prunes" --lottery_file="lticket_resnet18.t7" --params_left $k --save_file="r18_fisher_ltick_"$k"_params"
 done
+
+
+echo "fisher scratch done"
+
+# compare lottery tickets to random reinit
+for k in 11680678 8952944 3500000 780000
+do
+    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_l1_1900_prunes" --params_left $k --save_file="r18_l1_scratch_"$k"_params" &
+    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="lticket_resnet18_l1_1900_prunes" --params_left $k --save_file="r18_l1_ltick_"$k"_params"
+done
+
+
 
 source deactivate

@@ -1,0 +1,4 @@
+checkpoints/
+models/__pycache__/
+__pycache__/
+bash/*.out

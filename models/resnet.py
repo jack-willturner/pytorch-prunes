@@ -213,6 +213,7 @@ class MaskBlock(nn.Module):
 
         if middle_dim is 0:
             conv1 = Zero()
+            bn1 = Zero()
             bn2 = Zero()
             conv2 = ZeroMake(channels=self.out_channels, spatial=self.stride)
 
