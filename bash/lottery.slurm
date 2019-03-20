@@ -19,20 +19,20 @@ python prune.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --save_file
 echo "pruning done"
 
 # compare lottery tickets to random reinit
-for k in 11680678 8952944 3500000 780000
+for k in 300 600 900 1200 1500 1800
 do
-    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_1900_prunes" --params_left $k --save_file="r18_fisher_scratch_"$k"_params" &
-    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_1900_prunes" --lottery_file="lticket_resnet18.t7" --params_left $k --save_file="r18_fisher_ltick_"$k"_params"
+    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_"$k"_prunes" --save_file="r18_fisher_scratch_"$k"_prunes" &
+    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_fisher_"$k"_prunes" --lottery --lottery_file="lticket_resnet18.t7" --save_file="r18_fisher_ltick_"$k"_prunes"
 done
 
 
 echo "fisher scratch done"
 
 # compare lottery tickets to random reinit
-for k in 11680678 8952944 3500000 780000
+for k in 300 600 900 1200 1500 1800
 do
-    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_l1_1900_prunes" --params_left $k --save_file="r18_l1_scratch_"$k"_params" &
-    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="lticket_resnet18_l1_1900_prunes" --params_left $k --save_file="r18_l1_ltick_"$k"_params"
+    python train.py --GPU 0 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="resnet18_l1_"$k"_prunes" --save_file="r18_l1_scratch_"$k"_prunes" &
+    python train.py --GPU 1 --net='resnet18' --data_loc='../prunes/data' --deploy --mask=1 --base_file="lticket_resnet18_l1_"$k"_prunes" --lottery --lottery_file="lticket_resnet18.t7" --save_file="r18_l1_ltick_"$k"_prunes"
 done
 
 
